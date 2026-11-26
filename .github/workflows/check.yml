@@ -25,3 +25,13 @@ jobs:
           repository: yasslab/${{ matrix.template }}
           path: template
       - run: ./check.sh template
+      # 受講者より先に気づくため、失敗を Slack の #tutorial-error に知らせる。
+      # PR（fork からのものを含む）は秘密を読めず、作者が Checks で見られるので知らせない
+      - name: 失敗を Slack に知らせる
+        if: failure() && github.event_name != 'pull_request'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEXT: "Codespaces のテンプレート ${{ matrix.template }} の起動確認が失敗しました（${{ github.event_name }}）: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          jq -n --arg text "$TEXT" '{text: $text}' |
+            curl -fsS -X POST -H 'Content-Type: application/json' --data @- "$SLACK_WEBHOOK_URL"
