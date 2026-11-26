@@ -1,0 +1,27 @@
+name: テンプレートが起動するか
+
+on:
+  schedule:
+    - cron: '0 21 * * *' # 毎朝 6:00 JST
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        template:
+          - codespaces-railstutorial
+          - codespaces-railstutorial-v8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: yasslab/${{ matrix.template }}
+          path: template
+      - run: ./check.sh template
